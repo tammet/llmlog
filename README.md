@@ -20,3 +20,6 @@ The outer loop of distribution generation is the maximal number of variables all
 
 `someprop.js` is an example file created by `makeproblems.py`, with 10 provable and 10 satisfiable problems for each distribution.
 
+`gpt.py` is for trying out prompts over the GPT API from the command line. Run without arguments to get a help text.
+
+`askllm.py` is for GPT-solving the problems created by `makeproblems.py`. It reads the file row by row, makes a prompt and asks GPT API.

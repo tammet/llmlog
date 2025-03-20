@@ -144,7 +144,7 @@ def main():
   #print("simpcount",simpcount)    
 
 
-def x_main():  
+def testing_main():  
   global allcls
   #test_ratios()
   #return
