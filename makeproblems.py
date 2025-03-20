@@ -35,7 +35,7 @@ import random, math, time
 # problems with fewer variables will be smaller and simpler
 varnr_range=[3,4,5,6,7,8,9,10,11,12,13,14,15] # ok varns are between 3 and 15, inclusive
 
-varnr_range=[3,4] #,5,6,7,8,9,10,11,12,13,14,15]
+varnr_range=[3,4,5,6,7,8,9,10,11,12,13,14,15]
 
 # the range of max clause lengths of problems, for each variable number
 cl_len_range=[3,4] # ok lens are between 2 and 5, inclusive 
@@ -46,7 +46,7 @@ horn_flags=[True,False] # should be a list of one or two booleans
 
 # the number of problems created for a fixed triple of varnr, cllen, hornflag
 # it has to be an even number!
-probs_for_onecase=100 # 100 will contain 50 satisfiable and 50 non-satisfiable, interleaved
+probs_for_onecase=20 # 100 will contain 50 satisfiable and 50 non-satisfiable, interleaved
 
 
 # ======== generator ======
@@ -112,7 +112,9 @@ def main():
           problems.append(newprob)
           choosefrom= not choosefrom
   simpcount=0  
-  print("""["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem","proof_of_inconsistency_or_satisfying_valuation"]""")
+  fline="""["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem","""
+  fline+=""" "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]"""
+  print(fline)
   for prob in problems:
     print (prob)  
 
@@ -581,7 +583,7 @@ def makeproof_aux(incl,allcls,proofcls):
 # in case the last element of the list is 0, the contradiction was derived
 
 def solve_prop_horn_problem(inclauses): 
-  print("inclauses",inclauses)
+  #print("inclauses",inclauses)
   newunits=[] # a list of new units derived during one iteration
   posunits={} # derived units
   hornrules=[] # all horn rules
@@ -644,7 +646,7 @@ def solve_prop_horn_problem(inclauses):
         if not canuse: 
           continue
         if posvar!=None and posvar not in posunits:       
-          print("keeping posvar",posvar)
+          #print("keeping posvar",posvar)
           posunits[posvar]=True
           nextunits.append(posvar)
           derivedunits.append(posvar)
@@ -654,7 +656,7 @@ def solve_prop_horn_problem(inclauses):
         break  
     # all newunits have been processed      
     if posvar==0 or not nextunits:
-      print("cp0 posvar nextunits",posvar,nextunits)
+      #print("cp0 posvar nextunits",posvar,nextunits)
       break
     else:
       newunits=nextunits  
