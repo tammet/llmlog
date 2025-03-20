@@ -6,7 +6,8 @@ The global configuration variables are at the beginning of the code. The first p
 Each following line is one propositional problem along with the metainformation and a proof or a satisfying valuation, as a json / python nested list of integers.
 The meaning of the list elements, as indicated on the first line:
 
-    ["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem", "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]
+    ["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem", 
+    "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]
 
 * Here "maxvarnr","maxlen","mustbehorn","issatisfiable" indicate the concrete distribution. 
 * Problems are represented as clauses, each clause being a list of positive/negative integers. 
