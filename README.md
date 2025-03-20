@@ -5,8 +5,10 @@ Experiments with LLMs and logic: what can LLMs solve?
 The global configuration variables are at the beginning of the code. The first printed line describes the format of following lines.
 Each following line is one propositional problem along with the metainformation and a proof or a satisfying valuation, as a json / python nested list of integers.
 The meaning of the list elements, as indicated on the first line:
-* ["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem", "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]. 
-Here "maxvarnr","maxlen","mustbehorn","issatisfiable" indicate the concrete distribution. 
+
+   ["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem", "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]
+
+* Here "maxvarnr","maxlen","mustbehorn","issatisfiable" indicate the concrete distribution. 
 * Problems are represented as clauses, each clause being a list of positive/negative integers. 
 * A proof is a list of input and derived clauses in the format 
 ["clause_number_in_proof","parent_clause_numbers","derived_clause"]. 
