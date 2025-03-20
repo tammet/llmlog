@@ -24,5 +24,4 @@ The outer loop of distribution generation is the maximal number of variables all
 
 `askllm.py` is for GPT-solving the problems created by `makeproblems.py`. It reads the file row by row, makes a prompt and asks GPT API.
 Run without arguments to get a help text. The output is both printed and written to a file `gptresults.js` row-by-row as json lists. Each list
-contains the original full input problem along with metainfo and proofs/valuations, to which is appended 0 (wrong answer) or 1 (correct answer)
-and finally the whole textual answer given by LLM.
+contains the original full input problem along with metainfo and proofs/valuations, to which is appended the parsed answer, either 0 (GPT claims contradiction) or 1 (GPT claims satisfiable) and finally the whole textual answer given by LLM.
