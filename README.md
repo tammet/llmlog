@@ -1,6 +1,6 @@
 # llmlog
 
-** Experiments with LLMs and logic: what can LLMs solve? **
+**Experiments with LLMs and logic: what can LLMs solve?**
 
 ## Code and files
 

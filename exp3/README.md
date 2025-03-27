@@ -1,6 +1,6 @@
 # experiments v3: specifically horn problems
 
-** just 200 first horn clauses only, asking for a linear p1, p2, ... etc CoT output with derived variables printed out one by one **
+**Just 200 first horn clauses only, asking for a linear p1, p2, ... etc CoT output with derived variables printed out one by one**
 
 problems_dist20_v1.js:
 Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per distribution.

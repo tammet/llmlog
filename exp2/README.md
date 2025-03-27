@@ -1,6 +1,6 @@
 # experiments v2
 
-** a more compact representation than used in exp1: seems slightly better **
+**A more compact representation than used in exp1: seems slightly better**
 
 problems_dist20_v1.js:
 Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per distribution.

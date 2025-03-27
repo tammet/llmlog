@@ -1,6 +1,6 @@
 # experiments v1
 
-** base experiment with GPT-4o and 800 problems * *
+**Base experiment with GPT-4o and 800 problems**
 
 problems_dist20_v1.js:
 Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per distribution.
