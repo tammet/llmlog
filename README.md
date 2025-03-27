@@ -35,9 +35,10 @@ contains the original full input problem along with metainfo and proofs/valuatio
 
 The *exp* subfolders contain code and data for specific separate experiments. They do typically have their own README.
 
-These exp folders are all use the problem file `problems_dist20_v1.js`:
+These exp folders all use the problem file `problems_dist20_v1.js`:
 
-* exp1 : base experiment with GPT-4o and 800 problems
-* exp2 : a more compact representation than used in exp1: seems slightly better
+* exp1 : base experiment with GPT-4o and 800 problems, using "p1 is true" and "p1 is false" representation with connecting "or".
+* exp2 : a more compact representation ("p1" and "not(p1)") than used in exp1: seems slightly better
 * exp3 : just 200 first horn clauses only, asking for a linear p1, p2, ... etc CoT output with derived variables printed out one by one
 * exp4 : just 200 first horn clauses only, asking for a linear p1 [parents], p2 [parents], ... etc CoT output with concrete derivation steps
+* exp4 : just 300 first horn clauses only, using the "if...then" representation, asking for a linear p1, p2, ... etc CoT output with derived variables printed out 
