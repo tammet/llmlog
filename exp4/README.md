@@ -13,10 +13,6 @@ Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per dis
     seed=1234
     max_tokens=2000
 
-The difference from exp3 (v3): 
-* horn only
-* the specific method for producing CoT output contains also explicit proof steps
-* also single proof steps are separately described plus examples given
 
 
     details+="A true variable X is directly derivable by a statement S if and only if S consists of X and a number of negative variables not(Y), not(Z) etc, so that \n"
