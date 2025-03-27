@@ -1,8 +1,8 @@
 # llmlog
 
-* Experiments with LLMs and logic: what can LLMs solve? *
+** Experiments with LLMs and logic: what can LLMs solve? **
 
-== Code and files ==
+## Code and files
 
 `makeproblems.py` prints out a configurable number of different propositional logic problem distributions along with their proofs or satisfying valuations.
 The global configuration variables are at the beginning of the code. The first printed line describes the format of following lines.
@@ -31,7 +31,7 @@ contains the original full input problem along with metainfo and proofs/valuatio
 
 `analyze.py` is for creating statistics about one askllm.py output.
 
-== Subfolders and separate experiments ==
+## Subfolders and separate experiments 
 
 The *exp* subfolders contain code and data for specific separate experiments. They do typically have their own README.
 
