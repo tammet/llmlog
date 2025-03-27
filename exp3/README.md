@@ -18,6 +18,7 @@ The difference from exp2 (v2):
 * we give a specific method for producing CoT output, along with 12 examples: print all derivable variables until contradiction
 or no more can be found
 
+Useful important prompt details:
 
     example="Twelve examples:\n"
     example+="Example 1. Statements: p1. p2. not(p1). Answer: contradiction.\n"
