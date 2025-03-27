@@ -24,6 +24,7 @@
 import sys
 import json
 import http.client
+import time
 
 # ==== import other source files ====
 
@@ -35,7 +36,12 @@ secrets_file="secrets.js"
 gpt2="davinci-002"         # text-davinci-002 code-davinci-002 babbage-002 
 gpt3="gpt-3.5-turbo-0125"  # 
 gpt4="gpt-4-0125-preview"  # gpt-4  gpt-4-32k 
-gpt4="gpt-4o-2024-05-13"
+gpt4="gpt-4o-2024-11-20"
+
+#gpt-4o-2024-11-20
+#gpt-4o-2024-08-06
+#gpt-4o-2024-05-13
+
 gpt3_instruct="gpt-3.5-turbo-instruct-0914"  # "gpt-3.5-turbo-instruct" 
 
 temperature=0
@@ -80,7 +86,7 @@ def main():
       gptversion=gpt3_instruct
     elif el.strip().isnumeric():
       max_rows=int(el.strip())
-    elif len(el)<20 and " " not in el:
+    elif len(el)<100 and " " not in el:
       problemfile=el 
   if not problemfile:
      show_error("problemfile not given")                  
@@ -112,13 +118,17 @@ def main():
   except:
     show_error("could not open output file "+outfile)    
   # run problems read, one by one
+  count=0
   processed=0
   correct=0
   correctsat=0
   correctunsat=0
   for problem in problems:
+    count+=1
+    #if count<249: continue
+    #if count>285: break
     sysprompt=None
-    prompt=makeprompt(problem)
+    prompt=makeprompt_v1(problem)
     debug_print("gpt:",gptversion)
     #debug_print("sysprompt:",sysprompt)
     debug_print("prompt:",prompt)
@@ -148,20 +158,59 @@ def main():
   print("correct answers for unsatisfiable problems (half):",correctunsat)
 
 def parse_result(txt):
-  txt=txt.replace(".","").replace(","," ").replace(":"," ").replace("\n","").replace("\r","")
+  txt=txt.replace(".","").replace(","," ").replace(":"," ").replace("*","").replace("'","").replace("\n","").replace("\r","")
   txt=txt.strip().lower()
   sp=txt.split(" ")
-  if sp[-1] in ["contradiction","contradictory"]:
+  if sp[-1] in ["contradiction","contradictory","false","wrong"]:
     return 0
-  else:
+  elif sp[-1] in ["satisfiable","true","satisfied"]:
     return 1
+  elif sp[-1] in ["unknown","uncertain"]:
+    return 1
+  else:
+    return 2
   
 
 
 # ========= prompt creation =======
 
 
+
 def makeprompt(problem):
+  clauses=problem[5]
+  prefix="Your task is to solve a problem in propositional logic.\n"
+  prefix+="You will get a list of statements and have to determine whether the statements form a logical contradiction or not.\n"
+  prefix+="If the statements form a contradiction, the last word of your answer should be 'contradiction',\n"
+  prefix+="otherwise the last word should be either 'satisfiable' or 'unknown'.\n"
+
+  details="Propositional variables are represent as 'pN' where N is a number. They are either true or false.\n"
+  details+="pN means that pN is true. not(pN) means that pN is false.\n"
+  details+="'X or Y' means that X is true or Y is true or both X and Y are true.\n"
+  details+="All the given statements are implicitly connected with 'and': they are all claimed to be true.\n"
+  
+  example="Two examples:\n"
+  example+="Example 1. Statements: p1. not(p1) or p2. not(p2). Answer: contradiction.\n"
+  example+="Example 2. Statements: p1. p1 or p2. not(p2). Answer: satisfiable.\n"
+
+  statements="Statements:\n"
+  for clause in clauses:
+    statement=""
+    for var in clause:
+      if var>0: s="p"+str(var)
+      else: s="not("+"p"+str(0-var)+")"
+      if statement: statement+=" or "+s
+      else: statement=s
+    statement=statement+".\n"
+    statements=statements+statement
+
+  final="\nPlease think step by step and answer whether the given statements form a logical contradiction or is satisfiable.\n"  
+
+  prompt=prefix+details+example+statements+final
+  return prompt  
+
+# makeprompt_v1 is the old method for exp1
+
+def makeprompt_v1(problem):
   clauses=problem[5]
   prefix="Your task is to solve a problem in propositional logic.\n"
   prefix+="You will get a list of statements and have to determine whether the statements form a logical contradiction or not.\n"
@@ -256,21 +305,37 @@ def call_gpt(gptversion,sentences,sysprompt,max_tokens):
   debug_print("gpt call:",calltxt)
 
   host = "api.openai.com"
-  conn = http.client.HTTPSConnection(host)
-  conn.request("POST", baseurl, calltxt,
-               headers={
-    "Host": host, "Content-Type": "application/json", "Authorization": "Bearer "+key 
-  })
   
-  response = conn.getresponse()
-  if response.status!=200 or response.reason!="OK":
-    try:
-      data=json.loads(response.read())    
-      if "error" in data and "message" in data["error"]:
-        message=": "+data["error"]["message"]
-    except:
-      message=""      
-    show_error("gpt responded with error "+str(response.status)+" "+str(response.reason)+message)
+  errcount=0
+  while(True):
+    conn = http.client.HTTPSConnection(host)
+    conn.request("POST", baseurl, calltxt,
+                headers={
+      "Host": host, "Content-Type": "application/json", "Authorization": "Bearer "+key 
+    })
+    
+    response = conn.getresponse()
+    if response.status!=200 or response.reason!="OK":
+      errcount+=1            
+      #if str(response.status)==502:
+      if errcount>2:
+        print("gpt repeatedly responded with error")
+        try:
+          data=json.loads(response.read())    
+          if "error" in data and "message" in data["error"]:
+            message=": "+data["error"]["message"]
+        except:
+          message="" 
+          show_error("gpt error reason not found: data cannot be parsed")
+        show_error("gpt error, finally "+str(response.status)+" "+str(response.reason)+message)
+      else:
+        print("gpt responded with error, but we retry")
+        if conn: conn.close()  
+        time.sleep(2)
+    else:
+      # everything OK
+      break      
+    
   rawdata = response.read()
   try:
     data=json.loads(rawdata)
