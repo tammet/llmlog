@@ -1,13 +1,13 @@
-# experiments v5: specifically horn problems, with a step-by step provable variables CoT output
+# experiments v7: specifically horn problems, with a detailed proof output
 
-**Just 300 first horn clauses only, in the if...then representation, asking for a linear p1, p2, ... etc CoT output without full derivation steps**
+**All horn clauses (520) in problems_dist20_v1.js, in the if...then representation, asking for a linear p1, p2, ... etc CoT output without full derivation steps**
 
-**This experiment is superseded by exp7: better look at exp7**
+**This experiment supersedes exp5: no need to look at exp5**
 
 problems_dist20_v1.js:
 Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per distribution.
 
-Main result file: fixed_horn_gptresults.js, with 300 first horn problems
+Main result file: merged_horn_gptresults.js, with 520 horn problems
 
 Usage:
     gpt-4o-2024-11-20
@@ -15,10 +15,11 @@ Usage:
     seed=1234
     max_tokens=2000
 
-NB! The file `wrong_horn_gptresults.js` interprets some LLM-produced texts incorrectly. `fix.py` takes this file and prints a fixed file.
-`fixed_horn_gptresults.js` is a correctly interpreted results file.
+NB! 
+* The output file to use is `merged_horn_gptresults.js`: it is a concatenation of an earlier experiment `exp5_fixed_horn_gptresults.js` and current `horn_gptresults.js`
+* The `askllm.py` skips first 298 problems, since they were handled by exp5.
 
-The difference from exp3 (v3): 
+The core difference from exp3 (v3): 
 * instead of representation with or-clauses, we use if...then clauses like "if p1 and p2 then p3".
 * instead of asking about contradiction / satisfiability we ask whether a special variable p0 is derivable
 

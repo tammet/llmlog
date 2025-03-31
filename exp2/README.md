@@ -5,9 +5,9 @@
 problems_dist20_v1.js:
 Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per distribution.
 
-    gptresults_v2.js:
-    gpt solutions for the first 800 problems in the set above.
-    Usage:
+Main result file:  gptresults_v2.js,  gpt solutions for the first 800 problems in the set above.
+
+Usage:
     gpt-4o-2024-11-20
     temperature=0
     seed=1234
@@ -16,6 +16,7 @@ Problem set: 3..15 vars, 3..4 cllen, both horn and non-horn, 20 problems per dis
 The difference from exp1 (v1): instead of saying "pN is true/false" we say "p1" or "not(p1)".
 I.e. the problem statements are thus more compact. The explanations in the prompt also reflect this:
 
+Useful important prompt details:
 
     details="Propositional variables are represent as 'pN' where N is a number. They are either true or false.\n"
     details+="pN means that pN is true. not(pN) means that pN is false.\n"

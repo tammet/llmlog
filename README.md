@@ -41,4 +41,15 @@ These exp folders all use the problem file `problems_dist20_v1.js`:
 * exp2 : a more compact representation ("p1" and "not(p1)") than used in exp1: seems slightly better
 * exp3 : just 200 first horn clauses only, asking for a linear p1, p2, ... etc CoT output with derived variables printed out one by one
 * exp4 : just 200 first horn clauses only, asking for a linear p1 [parents], p2 [parents], ... etc CoT output with concrete derivation steps
-* exp5 : just 300 first horn clauses only, using the "if...then" representation, asking for a linear p1, p2, ... etc CoT output with derived variables printed out 
+* exp5 : (superseded by exp7) just 300 first horn clauses only, using the "if...then" representation, asking for a linear p1, p2, ... etc CoT output with derived variables printed out 
+* exp6 : (superseded by exp8) Just 300 first horn clauses only, in the if...then representation, asking for just a yes/no output without CoT
+* exp7 : 520 horn clauses, using the "if...then" representation, asking for a linear p1, p2, ... etc CoT output with derived variables printed out 
+* exp8 : 520 horn clauses, using the if...then representation, asking for just a yes/no output without CoT
+
+## Notes on performance 
+
+* exp1 demonstrates generally weak performance, getting worse as problems get more complex
+* exp2 shows that a more compact representation ("p1" and "not(p1)") vs ("p1 is true", "p1 is false") is slightly better
+* exp3 and exp4 show that the gpt4o does not understand the linear horn solving algorithm well enough when the clause notation with ... or ... is used
+* exp7 shows that gpt4o does understand the linear horn solving algorithm well (and performs well) in case the if .. then ... notation is used
+* exp8 shows that if linear horn solving algorithm is not described/explicated, then gpt4o performs badly on horn problems
