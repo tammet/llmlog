@@ -53,3 +53,41 @@ These exp folders all use the problem file `problems_dist20_v1.js`:
 * exp3 and exp4 show that the gpt4o does not understand the linear horn solving algorithm well enough when the clause notation with ... or ... is used
 * exp7 shows that gpt4o does understand the linear horn solving algorithm well (and performs well) in case the if .. then ... notation is used
 * exp8 shows that if linear horn solving algorithm is not described/explicated, then gpt4o performs badly on horn problems
+
+## Environment Setup
+
+It is recommended to use a Python virtual environment to manage dependencies for this project. Follow these steps:
+
+1. Create a new virtual environment:
+   ```
+   python3 -m venv venv
+   ```
+
+2. Activate the virtual environment:
+   - On macOS/Linux:
+     ```
+     source venv/bin/activate
+     ```
+   - On Windows:
+     ```
+     venv\Scripts\activate
+     ```
+
+3. Install the necessary packages:
+   - If a `requirements.txt` file is provided:
+     ```
+     pip install -r requirements.txt
+     ```
+   - Otherwise, you can manually install the needed packages. For example, to install matplotlib (which is required by `analyze.py`):
+     ```
+     pip install matplotlib
+     ```
+
+4. Add your API credentials:
+   Create a `secrets.js` file in the project root. This file should contain your API keys in valid JSON format. For example:
+   ```json
+   {
+     "gpt_key":"your-api-key-here"
+   }
+   ```
+   Make sure to add `secrets.js` to your `.gitignore` file to prevent it from being tracked by version control.
