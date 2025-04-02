@@ -84,10 +84,10 @@ It is recommended to use a Python virtual environment to manage dependencies for
      ```
 
 4. Add your API credentials:
-   Create a `secrets.js` file in the project root. This file should contain your API keys in valid JSON format. For example:
+   Create a `secrets.json` file in the project root. This file should contain your API keys in valid JSON format. For example:
    ```json
    {
      "gpt_key":"your-api-key-here"
    }
    ```
-   Make sure to add `secrets.js` to your `.gitignore` file to prevent it from being tracked by version control.
+   Make sure to add `secrets.json` to your `.gitignore` file to prevent it from being tracked by version control.
