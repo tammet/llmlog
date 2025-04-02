@@ -31,6 +31,8 @@ contains the original full input problem along with metainfo and proofs/valuatio
 
 `analyze.py` is for creating statistics about one askllm.py output.
 
+`utils/provider_manager.py` provides a unified interface for handling multiple LLM providers. Currently, it supports the Anthropic provider (via `utils/anthropic_client.py`) and can be extended to support others like OpenAI.
+
 `utils/anthropic_client.py` provides an interface to the Anthropic API (Claude models) for generating completions. It reads API keys from the secrets.json file and offers functions to create a client and generate completions.
 
 ## Subfolders and separate experiments 
