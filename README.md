@@ -31,6 +31,8 @@ contains the original full input problem along with metainfo and proofs/valuatio
 
 `analyze.py` is for creating statistics about one askllm.py output.
 
+`utils/anthropic_client.py` provides an interface to the Anthropic API (Claude models) for generating completions. It reads API keys from the secrets.json file and offers functions to create a client and generate completions.
+
 ## Subfolders and separate experiments 
 
 The *exp* subfolders contain code and data for specific separate experiments. They do typically have their own README.
@@ -87,7 +89,8 @@ It is recommended to use a Python virtual environment to manage dependencies for
    Create a `secrets.json` file in the project root. This file should contain your API keys in valid JSON format. For example:
    ```json
    {
-     "gpt_key":"your-api-key-here"
+     "gpt_key": "your-openai-api-key-here",
+     "anthropic_api_key": "your-anthropic-api-key-here"
    }
    ```
    Make sure to add `secrets.json` to your `.gitignore` file to prevent it from being tracked by version control.
