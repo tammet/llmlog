@@ -31,9 +31,13 @@ contains the original full input problem along with metainfo and proofs/valuatio
 
 `analyze.py` is for creating statistics about one askllm.py output.
 
-`utils/provider_manager.py` provides a unified interface for handling multiple LLM providers. Currently, it supports the Anthropic provider (via `utils/anthropic_client.py`) and can be extended to support others like OpenAI.
+`providers/provider_manager.py` provides a unified interface for handling multiple LLM providers. Currently, it supports the Anthropic provider (via `utils/anthropic_client.py`) and can be extended to support others like OpenAI.
 
-`utils/anthropic_client.py` provides an interface to the Anthropic API (Claude models) for generating completions. It reads API keys from the secrets.json file and offers functions to create a client and generate completions.
+`providers/anthropic_client.py` provides an interface to the Anthropic API (Claude models) for generating completions. It reads API keys from the secrets.json file and offers functions to create a client and generate completions.
+
+`providers/openai_client.py` provides an interface to the OpenAI API (GPT models) for generating completions. It reads API keys from the secrets.json file and offers functions to create a client and generate completions.
+
+`backend` directory holds a modular approach to runnign the workflows. WIP
 
 ## Subfolders and separate experiments 
 
@@ -92,7 +96,8 @@ It is recommended to use a Python virtual environment to manage dependencies for
    ```json
    {
      "gpt_key": "your-openai-api-key-here",
-     "anthropic_api_key": "your-anthropic-api-key-here"
+     "anthropic_api_key": "your-anthropic-api-key-here",
+     "openai_api_key": "your-openai-api-key-here"
    }
    ```
    Make sure to add `secrets.json` to your `.gitignore` file to prevent it from being tracked by version control.

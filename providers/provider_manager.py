@@ -19,7 +19,8 @@ def generate_completion(provider: str, prompt: str, **kwargs) -> str:
         from .anthropic_client import generate_completion as anthropic_generate_completion
         return anthropic_generate_completion(prompt, **kwargs)
     elif provider == "openai":
-        raise NotImplementedError("OpenAI provider is not implemented yet")
+        from .openai_client import generate_completion as openai_generate_completion
+        return openai_generate_completion(prompt, **kwargs)
     else:
         raise ValueError(f"Unknown provider: {provider}")
 
