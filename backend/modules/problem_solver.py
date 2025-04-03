@@ -2,7 +2,7 @@ import sys
 import json
 
 # ==== import other source files ====
-from utils.provider_manager import generate_completion
+from providers.provider_manager import generate_completion
 
 
 secrets_file="secrets.js"
