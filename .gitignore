@@ -1,6 +1,7 @@
 # secret stuff
 claude_secrets.js
 secrets.js
+secrets.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
