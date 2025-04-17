@@ -221,6 +221,7 @@ def run_logic_evaluation(evaluation_configs: list, problem_filepath: str, output
                 for config in evaluation_configs: # Use passed list
                     config_id = config["id"]
                     provider = config["provider"]
+                    model = config["model"]
                     if prompt_generated:
                         print(f"  Querying {provider.capitalize()}...")
                     else:
