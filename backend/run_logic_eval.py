@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script to run propositional logic problems from a file against multiple LLM providers
-using provider_manager, evaluate correctness, and save detailed results per provider.
+Script to run propositional logic problems from a file against multiple LLM providers/models
+using provider_manager, evaluate correctness, and save detailed results per configuration.
 """
 
 import os
@@ -25,27 +25,9 @@ except ImportError as e:
     print("Ensure the script is run from the 'backend' directory or the project root is in PYTHONPATH.")
     sys.exit(1)
 
-# --- Configuration ---
-PROVIDERS_TO_RUN = ["anthropic", "openai", "google"]
+# --- Configuration Loading ---
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "logic_results")
-# Define provider-specific default arguments
-# NOTE: Replace with actual valid parameter names and sensible defaults for each provider
-PROVIDER_DEFAULT_CONFIGS = {
-    "anthropic": {
-        "max_tokens_to_sample": 4096, # Example: Anthropic uses max_tokens_to_sample
-        "temperature": 0.0
-    },
-    "openai": {
-        "max_tokens": 4096, # Use max_tokens for chat.completions.create
-        "temperature": 0.0
-    },
-    "google": {
-        "maxOutputTokens": 4096, # Example: Google might use maxOutputTokens
-        "temperature": 0.0
-    },
-    # Add other providers and their specific defaults here
-}
-# --- End Configuration ---
+DEFAULT_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "evaluation_configs.json")
 
 # --- Helper Functions (Adapted from askllm.py) ---
 
@@ -122,32 +104,58 @@ def ensure_dir(directory_path: str):
 
 # --- Main Evaluation Logic ---
 
-def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int):
+def load_evaluation_configs(config_filepath: str) -> list:
+    """Loads evaluation configurations from a JSON file."""
+    try:
+        with open(config_filepath, 'r', encoding='utf-8') as f:
+            configs = json.load(f)
+        if not isinstance(configs, list):
+            raise ValueError("Configuration file should contain a JSON list.")
+        # Basic validation (can be expanded)
+        for i, cfg in enumerate(configs):
+            if not isinstance(cfg, dict) or not all(k in cfg for k in ['id', 'provider', 'model']):
+                raise ValueError(f"Invalid structure for config item {i+1}. Must be a dict with 'id', 'provider', 'model'.")
+        return configs
+    except FileNotFoundError:
+        print(f"Error: Configuration file not found at {config_filepath}")
+        sys.exit(1)
+    except json.JSONDecodeError as json_err:
+        print(f"Error: Could not parse configuration file {config_filepath}: {json_err}")
+        sys.exit(1)
+    except ValueError as val_err:
+        print(f"Error: Invalid configuration format in {config_filepath}: {val_err}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: An unexpected error occurred while loading {config_filepath}: {e}")
+        sys.exit(1)
+
+def run_logic_evaluation(evaluation_configs: list, problem_filepath: str, output_dir: str, max_rows: int):
     """
-    Runs logic problems from a file against providers, evaluates, and saves results.
+    Runs logic problems from a file against defined evaluation configurations,
+    evaluates, and saves results.
     """
     ensure_dir(output_dir)
     run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Define output files per provider using JSONL format
-    provider_output_files = {
-        provider: os.path.join(output_dir, f"{run_timestamp}_{provider}_results.jsonl")
-        for provider in PROVIDERS_TO_RUN
+    # Use the passed evaluation_configs list
+    config_output_files = {
+        config["id"]: os.path.join(output_dir, f"{run_timestamp}_{config['id']}_results.jsonl")
+        for config in evaluation_configs # Use passed list
     }
-
-    stats = {provider: {'processed': 0, 'correct': 0, 'errors': 0, 'unknown': 0} for provider in PROVIDERS_TO_RUN}
-    total_problems_attempted = 0 # Count problems read and attempted
+    stats = {config["id"]: {'processed': 0, 'correct': 0, 'errors': 0, 'unknown': 0} for config in evaluation_configs} # Use passed list
+    total_problems_attempted = 0
 
     print(f"Starting logic evaluation run: {run_timestamp}")
     print(f"Problem file: {problem_filepath}")
     print(f"Output directory: {os.path.abspath(output_dir)}")
     print(f"Max problems to process: {max_rows if max_rows > 0 else 'All'}")
-    print(f"Providers: {PROVIDERS_TO_RUN}")
-    print(f"Provider default configs: {PROVIDER_DEFAULT_CONFIGS}")
+    print("Evaluation Configurations:")
+    for cfg in evaluation_configs: # Use passed list
+        print(f"  ID: {cfg['id']}, Provider: {cfg['provider']}, Model: {cfg['model']}, Args: { {k: v for k, v in cfg.items() if k not in ['id', 'provider']} }")
     print("-" * 50)
 
-    # --- Create/Clear output files at the start of the run ---
-    for file_path in provider_output_files.values():
+    # Create/Clear output files for each config
+    for file_path in config_output_files.values():
         try:
             # Open in 'w' mode to clear/create the file initially
             with open(file_path, 'w', encoding='utf-8') as f_out:
@@ -209,17 +217,19 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int):
                     prompt_generated = False
                     # We'll still create result files indicating the prompt error
 
-                # Process this problem for all providers
-                for provider in PROVIDERS_TO_RUN:
+                # Loop through configurations instead of providers
+                for config in evaluation_configs: # Use passed list
+                    config_id = config["id"]
+                    provider = config["provider"]
                     if prompt_generated:
                         print(f"  Querying {provider.capitalize()}...")
                     else:
                         print(f"  Skipping {provider.capitalize()} due to prompt generation error.")
 
-                    stats[provider]['processed'] += 1 # Count an attempt for this provider
+                    stats[config_id]['processed'] += 1 # Count an attempt for this provider
                     
                     # Get provider-specific arguments
-                    provider_specific_args = PROVIDER_DEFAULT_CONFIGS.get(provider, {})
+                    provider_specific_args = {k: v for k, v in config.items() if k not in ['id', 'provider']}
 
                     # Initialize result structure
                     result_data = {
@@ -254,11 +264,11 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int):
                             # Evaluate correctness (parsed_result can be 0, 1, or 2)
                             if parsed_result == expected_answer:
                                 is_correct = True
-                                stats[provider]['correct'] += 1
+                                stats[config_id]['correct'] += 1
                                 print(f"    -> Correct (Expected: {expected_answer}, Got: {parsed_result})")
                             elif parsed_result == 2:
                                 is_correct = False # Treat 'unknown' as incorrect for accuracy calculation
-                                stats[provider]['unknown'] += 1
+                                stats[config_id]['unknown'] += 1
                                 print(f"    -> Unknown Output (Expected: {expected_answer}, Got: {parsed_result})")
                             else: # Parsed result is 0 or 1, but doesn't match expected
                                 is_correct = False
@@ -272,21 +282,21 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int):
                             print(f"    -> {error_message}")
                             result_data["error_message"] = error_message
                             result_data["traceback"] = traceback.format_exc(limit=10) # Limit traceback length
-                            stats[provider]['errors'] += 1
+                            stats[config_id]['errors'] += 1
                         except Exception as e:
                             error_message = f"Unexpected Error during API call/parsing: {type(e).__name__} - {e}"
                             print(f"    -> {error_message}")
                             result_data["error_message"] = error_message
                             result_data["traceback"] = traceback.format_exc(limit=10)
-                            stats[provider]['errors'] += 1
+                            stats[config_id]['errors'] += 1
                     else:
                         # Prompt error occurred before this provider loop
                         result_data["status"] = "error"
                         result_data["error_message"] = "Skipped due to prompt generation error."
-                        stats[provider]['errors'] += 1
+                        stats[config_id]['errors'] += 1
 
                     # --- MODIFIED: Append result to the provider's JSONL file ---
-                    output_filepath = provider_output_files[provider] # Get the correct file path
+                    output_filepath = config_output_files[config_id] # Get the correct file path
                     try:
                         with open(output_filepath, "a", encoding="utf-8") as f_out:
                             # Convert result_data to a JSON string and add a newline
@@ -319,7 +329,7 @@ def print_summary(stats, total_valid_problems):
         return
 
     print("-" * 30)
-    for provider, data in stats.items():
+    for config_id, data in stats.items():
         processed = data['processed']
         # Ensure processed count matches total_valid_problems if no errors occurred before loop
         # Note: processed can be higher if errors happened *during* the provider loop for some problems
@@ -331,7 +341,7 @@ def print_summary(stats, total_valid_problems):
         attempted_for_accuracy = processed - errors - unknown 
         accuracy = (correct / attempted_for_accuracy * 100) if attempted_for_accuracy > 0 else 0
         
-        print(f"Provider: {provider.capitalize()}")
+        print(f"Configuration ID: {config_id}")
         print(f"  Problems Attempted: {processed}") # This count might differ per provider if errors occur
         print(f"  Correct Answers:    {correct}")
         print(f"  Incorrect Answers:  {attempted_for_accuracy - correct}")
@@ -343,17 +353,21 @@ def print_summary(stats, total_valid_problems):
 def main():
     parser = argparse.ArgumentParser(description="Run logic problems against LLM providers and save results.")
     parser.add_argument("problem_file", help="Path to the JSON-lines problem file.")
-    parser.add_argument("-o", "--output-dir", default=DEFAULT_OUTPUT_DIR, 
+    parser.add_argument("-c", "--config-file", default=DEFAULT_CONFIG_FILE,
+                        help=f"Path to the JSON configuration file for evaluation runs (default: {DEFAULT_CONFIG_FILE})")
+    parser.add_argument("-o", "--output-dir", default=DEFAULT_OUTPUT_DIR,
                         help=f"Directory to save result JSON files (default: {DEFAULT_OUTPUT_DIR})")
-    parser.add_argument("-n", "--max-rows", type=int, default=0, 
+    parser.add_argument("-n", "--max-rows", type=int, default=0,
                         help="Maximum number of problems to process from the file (0 for all, default: 0)")
-    # Add other potential arguments like temperature?
-    # parser.add_argument("--temperature", type=float, default=DEFAULT_ARGS['temperature'], help="Set generation temperature")
 
     args = parser.parse_args()
 
+    # Load configs from file
+    evaluation_configs = load_evaluation_configs(args.config_file)
+
     # Run the evaluation
     stats, total_processed = run_logic_evaluation(
+        evaluation_configs=evaluation_configs,
         problem_filepath=args.problem_file,
         output_dir=args.output_dir,
         max_rows=args.max_rows,

@@ -1,0 +1,30 @@
+[
+    {
+        "id": "anthropic_sonnet_t0",
+        "provider": "anthropic",
+        "model": "claude-3-sonnet-20240229",
+        "max_tokens_to_sample": 4096,
+        "temperature": 0.0
+    },
+    {
+        "id": "google_gemini_pro_t0",
+        "provider": "google",
+        "model": "gemini-1.5-pro",
+        "maxOutputTokens": 4096,
+        "temperature": 0.0
+    },
+    {
+        "id": "openai_gpt3.5_t0",
+        "provider": "openai",
+        "model": "gpt-3.5-turbo",
+        "max_tokens": 4096,
+        "temperature": 0.0
+    },
+    {
+        "id": "openai_gpt4_t0",
+        "provider": "openai",
+        "model": "gpt-4",
+        "max_tokens": 4096,
+        "temperature": 0.0
+    }
+] 
