@@ -238,7 +238,11 @@ def run_logic_evaluation(evaluation_configs: list, problem_filepath: str, output
                         "problem_line": row_count,
                         "problem_id_str": problem_id_str,
                         "problem_metadata": problem[:5], # First 5 elements (ids, counts, expected)
+                        "max_clause_length": problem[2], # Original maxlen
+                        "is_horn": problem[3],           # Original hornflag
+                        "config_id": config_id,
                         "provider": provider,
+                        "model": model, 
                         "prompt_generated": prompt_generated,
                         "provider_args": provider_specific_args,
                         "expected_answer": expected_answer, 
