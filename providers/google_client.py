@@ -25,7 +25,7 @@ def configure_google_api_key():
     genai.configure(api_key=api_key)
 
 
-def generate_completion(prompt: str, model: str = "gemini-1.5-flash-latest", max_output_tokens: int = 100) -> str:
+def generate_completion(prompt: str, model: str = "gemini-2.0-flash-exp", max_output_tokens: int = 100) -> str:
     """
     Generate a completion using the Google AI Studio API.
 

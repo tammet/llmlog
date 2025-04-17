@@ -26,53 +26,53 @@ def create_openai_client():
 
 
 
-def generate_completion(prompt: str, model: str = "o3-mini", max_output_tokens: int = 100) -> str:
+def generate_completion(prompt: str, model: str = "gpt-3.5-turbo", max_tokens: int = 4096) -> str:
     """
-    Generate a completion using the OpenAI Responses API.
+    Generate a completion using the OpenAI Chat Completions API.
 
     Args:
         prompt (str): The prompt text to complete.
-        model (str): The model to use (default: 'o3-mini').
-        max_output_tokens (int): Maximum output tokens to generate (default: 100).
+        model (str): The model to use (default: 'gpt-3.5-turbo').
+        max_tokens (int): Maximum tokens to generate in the completion (default: 4096).
 
     Returns:
         str: The generated completion text.
 
     Raises:
-        RuntimeError: If there is an error during the API request.
+        RuntimeError: If there is an error during the API request or parsing the response.
     """
     client = create_openai_client()
     try:
-        # Use the /responses/create endpoint
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=model,
-            max_output_tokens=max_output_tokens,
-            input=prompt,  # Input should be the prompt string directly
-            reasoning={
-                "effort": "high"
-            }
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant solving logic problems."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=max_tokens,
         )
-        # Iterate over the output items to find the message content using attribute access
-        for item in response.output:
-            if hasattr(item, "type") and item.type == "message":
-                if hasattr(item, "content") and item.content:
-                    first_content = item.content[0]
-                    if hasattr(first_content, "text"):
-                        return first_content.text
         
-        # Print full debug information of the response
-        print("DEBUG: Full response:", response)
-        raise RuntimeError("Could not find text content in OpenAI response output.")
+        if response.choices and response.choices[0].message and response.choices[0].message.content:
+            completion_text = response.choices[0].message.content.strip()
+            return completion_text
+        else:
+            print("DEBUG: Full response:", response)
+            raise RuntimeError("Could not find message content in OpenAI ChatCompletion response.")
+
+    except openai.APIError as api_err:
+         raise RuntimeError(f"OpenAI API Error: {api_err}")
     except Exception as e:
-        raise RuntimeError(f"Error during OpenAI Responses API request: {e}")
+        print("DEBUG: Unexpected error during OpenAI call:", e)
+        print("DEBUG: Full response object:", response if 'response' in locals() else 'N/A')
+        raise RuntimeError(f"Error during OpenAI Chat Completions API request: {e}")
 
 if __name__ == "__main__":
     # Test the functionality with a sample prompt.
     test_prompt = "What is the future of AI in simple terms?"
-    print("Sending test prompt to OpenAI Responses API...")
+    print("Sending test prompt to OpenAI Chat Completions API...")
     print("Prompt: ", test_prompt)
     try:
-        result = generate_completion(test_prompt, max_output_tokens=1000)
+        result = generate_completion(test_prompt, max_tokens=150)
         print("Received response:")
         print(result)
     except Exception as err:

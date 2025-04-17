@@ -28,11 +28,22 @@ except ImportError as e:
 # --- Configuration ---
 PROVIDERS_TO_RUN = ["anthropic", "openai", "google"]
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "logic_results")
-# Set a reasonable default token limit for logic problems
-DEFAULT_ARGS = {
-    "max_tokens": 300,
-    "max_output_tokens": 300,
-    "temperature": 0 # For deterministic results if provider supports it
+# Define provider-specific default arguments
+# NOTE: Replace with actual valid parameter names and sensible defaults for each provider
+PROVIDER_DEFAULT_CONFIGS = {
+    "anthropic": {
+        "max_tokens_to_sample": 4096, # Example: Anthropic uses max_tokens_to_sample
+        "temperature": 0.0
+    },
+    "openai": {
+        "max_tokens": 4096, # Use max_tokens for chat.completions.create
+        "temperature": 0.0
+    },
+    "google": {
+        "maxOutputTokens": 4096, # Example: Google might use maxOutputTokens
+        "temperature": 0.0
+    },
+    # Add other providers and their specific defaults here
 }
 # --- End Configuration ---
 
@@ -111,12 +122,18 @@ def ensure_dir(directory_path: str):
 
 # --- Main Evaluation Logic ---
 
-def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int, provider_args: dict):
+def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int):
     """
     Runs logic problems from a file against providers, evaluates, and saves results.
     """
     ensure_dir(output_dir)
     run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Define output files per provider using JSONL format
+    provider_output_files = {
+        provider: os.path.join(output_dir, f"{run_timestamp}_{provider}_results.jsonl")
+        for provider in PROVIDERS_TO_RUN
+    }
 
     stats = {provider: {'processed': 0, 'correct': 0, 'errors': 0, 'unknown': 0} for provider in PROVIDERS_TO_RUN}
     total_problems_attempted = 0 # Count problems read and attempted
@@ -126,8 +143,18 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int, 
     print(f"Output directory: {os.path.abspath(output_dir)}")
     print(f"Max problems to process: {max_rows if max_rows > 0 else 'All'}")
     print(f"Providers: {PROVIDERS_TO_RUN}")
-    print(f"Base provider args: {provider_args}")
+    print(f"Provider default configs: {PROVIDER_DEFAULT_CONFIGS}")
     print("-" * 50)
+
+    # --- Create/Clear output files at the start of the run ---
+    for file_path in provider_output_files.values():
+        try:
+            # Open in 'w' mode to clear/create the file initially
+            with open(file_path, 'w', encoding='utf-8') as f_out:
+                pass # Just ensure the file exists and is empty
+        except IOError as io_err:
+            print(f"Warning: Could not create/clear output file {file_path}: {io_err}")
+            # Depending on severity, you might want to exit or just log
 
     try:
         with open(problem_filepath, "r", encoding="utf-8") as f:
@@ -191,9 +218,9 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int, 
 
                     stats[provider]['processed'] += 1 # Count an attempt for this provider
                     
-                    output_filename = f"{run_timestamp}_{problem_id_str}_{provider}_result.json"
-                    output_filepath = os.path.join(output_dir, output_filename)
-                    
+                    # Get provider-specific arguments
+                    provider_specific_args = PROVIDER_DEFAULT_CONFIGS.get(provider, {})
+
                     # Initialize result structure
                     result_data = {
                         "run_timestamp": run_timestamp,
@@ -203,7 +230,7 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int, 
                         "problem_metadata": problem[:5], # First 5 elements (ids, counts, expected)
                         "provider": provider,
                         "prompt_generated": prompt_generated,
-                        "provider_args": provider_args,
+                        "provider_args": provider_specific_args,
                         "expected_answer": expected_answer, 
                         "status": "error", # Default to error
                         "raw_response": None,
@@ -217,7 +244,7 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int, 
                     if prompt_generated:
                         try:
                             # Generate completion using the provider manager
-                            raw_response = generate_completion(provider, prompt, **provider_args)
+                            raw_response = generate_completion(provider, prompt, **provider_specific_args)
                             result_data["raw_response"] = raw_response
                             
                             # Parse the result
@@ -258,17 +285,17 @@ def run_logic_evaluation(problem_filepath: str, output_dir: str, max_rows: int, 
                         result_data["error_message"] = "Skipped due to prompt generation error."
                         stats[provider]['errors'] += 1
 
-                    # Save the detailed result to a JSON file regardless of success/error
+                    # --- MODIFIED: Append result to the provider's JSONL file ---
+                    output_filepath = provider_output_files[provider] # Get the correct file path
                     try:
-                        with open(output_filepath, "w", encoding="utf-8") as rf:
-                            # Exclude the full prompt from JSON to keep files smaller?
-                            # result_data_to_save = {k: v for k, v in result_data.items() if k != 'prompt'} 
-                            # For now, include everything:
-                            result_data_to_save = result_data
-                            json.dump(result_data_to_save, rf, indent=2)
+                        with open(output_filepath, "a", encoding="utf-8") as f_out:
+                            # Convert result_data to a JSON string and add a newline
+                            json_line = json.dumps(result_data)
+                            f_out.write(json_line + '\n')
                     except IOError as io_err:
-                        print(f"    ERROR: Could not write result file {output_filepath}: {io_err}")
-                        # Log this failure, maybe update stats?
+                        print(f"    ERROR: Could not write result to {output_filepath}: {io_err}")
+                        # Optionally update stats for write errors if needed
+                    # --- End Modification ---
 
     except FileNotFoundError:
         print(f"Error: Problem file not found at {problem_filepath}")
@@ -320,27 +347,16 @@ def main():
                         help=f"Directory to save result JSON files (default: {DEFAULT_OUTPUT_DIR})")
     parser.add_argument("-n", "--max-rows", type=int, default=0, 
                         help="Maximum number of problems to process from the file (0 for all, default: 0)")
-    parser.add_argument("-t", "--max-tokens", type=int, default=None,
-                        help=f"Override default max_tokens/max_output_tokens for providers (default: {DEFAULT_ARGS['max_tokens']})")
     # Add other potential arguments like temperature?
     # parser.add_argument("--temperature", type=float, default=DEFAULT_ARGS['temperature'], help="Set generation temperature")
 
     args = parser.parse_args()
-
-    # Prepare provider arguments, overriding defaults if specified
-    provider_args = DEFAULT_ARGS.copy()
-    if args.max_tokens is not None:
-        provider_args["max_tokens"] = args.max_tokens
-        provider_args["max_output_tokens"] = args.max_tokens
-    # if args.temperature is not None:
-    #     provider_args["temperature"] = args.temperature
 
     # Run the evaluation
     stats, total_processed = run_logic_evaluation(
         problem_filepath=args.problem_file,
         output_dir=args.output_dir,
         max_rows=args.max_rows,
-        provider_args=provider_args
     )
 
     # Print the summary
